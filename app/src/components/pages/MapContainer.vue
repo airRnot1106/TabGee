@@ -4,24 +4,49 @@ export interface TabgeeTabs {
     enabledTabIndex: number;
 }
 
-export interface TabgeeTab {
+export class TabgeeTab {
     title: string;
     map: TabgeeMap;
     isEnabled: boolean;
+
+    constructor(title: string, map: TabgeeMap) {
+        this.title = title;
+        this.map = map;
+        this.isEnabled = true;
+    }
 }
 
-export interface TabgeeMap {
+export class TabgeeMap {
     latitude: number;
     longitude: number;
     zoom: number;
-    marker: TabgeeMarker[];
+    markers: TabgeeMarker[];
+
+    constructor(latitude: number, longitude: number, zoom: number) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.zoom = zoom;
+        this.markers = [];
+    }
 }
 
-export interface TabgeeMarker {
+export class TabgeeMarker {
     latitude: number;
     longitude: number;
     title: string;
     address: string;
+
+    constructor(
+        latitude: number,
+        longitude: number,
+        title: string,
+        address: string
+    ) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.title = title;
+        this.address = address;
+    }
 }
 </script>
 
@@ -32,6 +57,7 @@ import MapTab from '../modules/MapTab.vue';
 import SearchBox from '../modules/SearchBox.vue';
 import MapPanel from '../modules/MapPanel.vue';
 import { onMounted, reactive } from 'vue';
+import http from '../../axios';
 
 const getCurrentPosition = (): Promise<GeolocationPosition> => {
     if (!('geolocation' in navigator)) {
@@ -43,6 +69,7 @@ const getCurrentPosition = (): Promise<GeolocationPosition> => {
 };
 
 let lMap: L.Map | undefined;
+let lMarker: L.Marker[] = [];
 let mapLc: L.Control.Locate;
 
 const initMapPanel = (tab: TabgeeTab) => {
@@ -57,6 +84,13 @@ const initMapPanel = (tab: TabgeeTab) => {
         attribution:
             '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(lMap);
+    lMarker = [];
+    lMarker = tab.map.markers.map((marker) => {
+        const { latitude: lat, longitude: lng, title, address } = marker;
+        return L.marker([lat, lng])
+            .addTo(lMap)
+            .bindPopup(`<b>${title}</b><br>${address}`);
+    });
     lMap?.on('move', () => {
         const zoom = lMap?.getZoom();
         const pos = lMap?.getCenter();
@@ -68,10 +102,34 @@ const initMapPanel = (tab: TabgeeTab) => {
             zoom: zoom,
         });
     });
+    lMap?.on('contextmenu', async (e: L.LeafletMouseEvent) => {
+        const { lat, lng } = e.latlng;
+        const title = '新しいマーカー';
+        const address = (
+            await http.get(`/reverseGeocode?lat=${lat}&lon=${lng}`)
+        ).data.body[0].Property.Address;
+        const marker = {
+            latitude: lat,
+            longitude: lng,
+            title: title,
+            address: address ?? '不明な住所',
+        };
+        getEnabledTab().map.markers.push(marker);
+        viewLocalMarker();
+    });
 };
 
 onMounted(() => {
-    initMapPanel(defaultTab);
+    initMapPanel(
+        new TabgeeTab(
+            defaultTab.title,
+            new TabgeeMap(
+                defaultMap.latitude,
+                defaultMap.longitude,
+                defaultMap.zoom
+            )
+        )
+    );
     if (!lMap) return;
     mapLc = L.control
         .locate({
@@ -88,28 +146,37 @@ onMounted(() => {
         .addTo(lMap);
 });
 
-const defaultMap: TabgeeMap = {
-    latitude: 35.6759323,
-    longitude: 139.7450316,
-    zoom: 14,
-    marker: [],
-};
+const defaultMap: TabgeeMap = new TabgeeMap(35.6759323, 139.7450316, 14);
 
-const defaultTab: TabgeeTab = {
-    title: 'Tab01',
-    map: { ...defaultMap },
-    isEnabled: true,
-};
+const defaultTab = { title: 'Tab01' };
 
 const defaultTabsObj: TabgeeTabs = {
-    tabs: [{ ...defaultTab }],
+    tabs: [
+        new TabgeeTab(
+            defaultTab.title,
+            new TabgeeMap(
+                defaultMap.latitude,
+                defaultMap.longitude,
+                defaultMap.zoom
+            )
+        ),
+    ],
     enabledTabIndex: 0,
 };
 
-const reactivityTabsObj = reactive<TabgeeTabs>({ ...defaultTabsObj });
+const reactivityTabsObj = reactive<TabgeeTabs>(defaultTabsObj);
 
 const initTabs = () => {
-    reactivityTabsObj.tabs = [{ ...defaultTab }];
+    reactivityTabsObj.tabs = [
+        new TabgeeTab(
+            defaultTab.title,
+            new TabgeeMap(
+                defaultMap.latitude,
+                defaultMap.longitude,
+                defaultMap.zoom
+            )
+        ),
+    ];
     reactivityTabsObj.enabledTabIndex = 0;
 };
 
@@ -141,11 +208,14 @@ const toggleTab = (tabIndex: number) => {
 };
 
 const createNewTab = () => {
-    const newTab = {
-        title: 'Tab' + `${reactivityTabsObj.tabs.length + 1}`.padStart(2, '0'),
-        map: { ...defaultMap },
-        isEnabled: true,
-    };
+    const newTab = new TabgeeTab(
+        'Tab' + `${reactivityTabsObj.tabs.length + 1}`.padStart(2, '0'),
+        new TabgeeMap(
+            defaultMap.latitude,
+            defaultMap.longitude,
+            defaultMap.zoom
+        )
+    );
     reactivityTabsObj.tabs.push(newTab);
     toggleTab(reactivityTabsObj.tabs.length - 1);
 };
@@ -176,6 +246,27 @@ const updatePanel = (location: {
     enabledTab.map.longitude = longitude;
     enabledTab.map.zoom = zoom;
 };
+
+const viewLocalMarker = () => {
+    const enabledTab = getEnabledTab();
+    const markers = enabledTab.map.markers.map((marker) => {
+        const { latitude: lat, longitude: lng, title, address } = marker;
+        return L.marker([lat, lng])
+            .addTo(lMap)
+            .bindPopup(`<b>${title}</b><br>${address}`);
+    });
+    lMarker = markers;
+};
+
+const jumpView = (location: {
+    latitude: number;
+    longitude: number;
+    zoom: number;
+}) => {
+    updatePanel(location);
+    const { latitude, longitude, zoom } = location;
+    lMap?.setView([latitude, longitude], zoom);
+};
 </script>
 
 <template>
@@ -186,7 +277,10 @@ const updatePanel = (location: {
         v-bind:tabs="reactivityTabsObj"
     ></MapTab>
     <div class="relative">
-        <SearchBox class="absolute top-5 left-5 z-10"></SearchBox>
+        <SearchBox
+            @jump-view="jumpView"
+            class="absolute top-5 left-5 z-10"
+        ></SearchBox>
         <MapPanel class="mapPanel z-0"></MapPanel>
     </div>
 </template>
