@@ -18,7 +18,7 @@ if (process.env['NODE_ENV'] !== 'production') {
     app.use(cors());
 }
 
-app.use(serveStatic(__dirname + '/dist'));
+app.use(serveStatic(__dirname + '/../../app/dist'));
 
 app.listen(port, () =>
     console.log(`Example app listening at http://localhost:${port}`)
