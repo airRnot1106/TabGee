@@ -7,7 +7,7 @@ export default defineConfig({
     plugins: [vue()],
     root: './app',
     build: {
-        outDir: '../dist',
+        outDir: './dist',
     },
     server: {
         port: 8080,
