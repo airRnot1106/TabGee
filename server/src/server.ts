@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+//@ts-nocheck
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
