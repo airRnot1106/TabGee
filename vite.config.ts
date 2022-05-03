@@ -6,6 +6,9 @@ import vue from '@vitejs/plugin-vue';
 export default defineConfig({
     plugins: [vue()],
     root: './app',
+    build: {
+        outDir: '../dist',
+    },
     server: {
         port: 8080,
     },

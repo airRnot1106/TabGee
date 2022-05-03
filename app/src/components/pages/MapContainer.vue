@@ -61,18 +61,10 @@ import L from 'leaflet';
 import MapTab from '../modules/MapTab.vue';
 import SearchBox from '../modules/SearchBox.vue';
 import MapPanel from '../modules/MapPanel.vue';
-import { onMounted, reactive } from 'vue';
+import { inject, onMounted, reactive, watch } from 'vue';
 import http from '../../axios';
 import MarkerList from '../modules/MarkerList.vue';
-
-const getCurrentPosition = (): Promise<GeolocationPosition> => {
-    if (!('geolocation' in navigator)) {
-        return Promise.reject('Geolocation is not available');
-    }
-    return new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject);
-    });
-};
+import { VueCookies } from 'vue-cookies';
 
 let lMap: L.Map | undefined;
 let lMarker: L.Marker[] = [];
@@ -86,11 +78,25 @@ const initMapPanel = (tab: TabgeeTab) => {
         [latitude, longitude],
         zoom
     );
-    L.control.zoom({ position: 'topright' }).addTo(lMap);
+
     L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
         attribution:
             "<a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>地理院タイル</a>",
     }).addTo(lMap);
+    L.control.zoom({ position: 'topright' }).addTo(lMap);
+    L.control
+        .locate({
+            position: 'topright',
+            strings: {
+                title: '現在地を表示',
+                popup: '現在地',
+            },
+            locateOptions: {
+                maxZoom: 16,
+            },
+            icon: 'fa-solid fa-location-dot',
+        })
+        .addTo(lMap);
     lMarker = [];
     lMarker = tab.map.markers.map((marker) => {
         const { latitude: lat, longitude: lng, title, address } = marker;
@@ -140,35 +146,28 @@ const initMapPanel = (tab: TabgeeTab) => {
             memo: '',
         };
         getEnabledTab().map.markers.push(marker);
-        viewLocalMarker();
+        viewMarker();
     });
 };
 
 onMounted(() => {
-    initMapPanel(
-        new TabgeeTab(
-            defaultTab.title,
-            new TabgeeMap(
-                defaultMap.latitude,
-                defaultMap.longitude,
-                defaultMap.zoom
+    const cookie = $cookies.get('tabs');
+    if (cookie) {
+        reactivityTabsObj.enabledTabIndex = cookie.enabledTabIndex;
+        reactivityTabsObj.tabs = cookie.tabs;
+        initMapPanel(getEnabledTab());
+    } else {
+        initMapPanel(
+            new TabgeeTab(
+                defaultTab.title,
+                new TabgeeMap(
+                    defaultMap.latitude,
+                    defaultMap.longitude,
+                    defaultMap.zoom
+                )
             )
-        )
-    );
-    if (!lMap) return;
-    mapLc = L.control
-        .locate({
-            position: 'topright',
-            strings: {
-                title: '現在地を表示',
-                popup: 'いまここ',
-            },
-            locateOptions: {
-                maxZoom: 16,
-            },
-            icon: 'fa-solid fa-location-dot',
-        })
-        .addTo(lMap);
+        );
+    }
 });
 
 const defaultMap: TabgeeMap = new TabgeeMap(35.6759323, 139.7450316, 14);
@@ -190,6 +189,12 @@ const defaultTabsObj: TabgeeTabs = {
 };
 
 const reactivityTabsObj = reactive<TabgeeTabs>(defaultTabsObj);
+
+const $cookies = inject<VueCookies>('$cookies');
+
+watch(reactivityTabsObj, () => {
+    $cookies.set('tabs', reactivityTabsObj);
+});
 
 const initTabs = () => {
     reactivityTabsObj.tabs = [

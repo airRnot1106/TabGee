@@ -28,7 +28,10 @@ const removeMarker = (marker: TabgeeMarker) => {
 </script>
 
 <template>
-    <div class="overflow-auto bg-gray-200 py-10 px-40" style="height: 30vh">
+    <div
+        class="overflow-auto overscroll-contain bg-gray-200 py-10 px-40"
+        style="height: 30vh"
+    >
         <div class="bg-white p-5 rounded-lg">
             <div class="flex items-center">
                 <i class="fa-solid fa-location-dot px-1"></i>

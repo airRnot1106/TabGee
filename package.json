@@ -20,7 +20,8 @@
         "leaflet.locatecontrol": "^0.76.0",
         "leaflet.visualclick": "^1.1.4",
         "node-fetch": "^2.6.7",
-        "vue": "^3.2.25"
+        "vue": "^3.2.25",
+        "vue-cookies": "^1.8.1"
     },
     "devDependencies": {
         "@types/cors": "^2.8.12",
