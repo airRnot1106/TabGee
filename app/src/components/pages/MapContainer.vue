@@ -33,8 +33,11 @@ export class TabgeeMap {
 export class TabgeeMarker {
     latitude: number;
     longitude: number;
+    isTitleInputState: boolean;
+    isMemoInputState: boolean;
     title: string;
     address: string;
+    memo: string;
 
     constructor(
         latitude: number,
@@ -44,8 +47,11 @@ export class TabgeeMarker {
     ) {
         this.latitude = latitude;
         this.longitude = longitude;
+        this.isTitleInputState = false;
+        this.isMemoInputState = false;
         this.title = title;
         this.address = address;
+        this.memo = '';
     }
 }
 </script>
@@ -53,11 +59,11 @@ export class TabgeeMarker {
 <script setup lang="ts">
 import L from 'leaflet';
 import MapTab from '../modules/MapTab.vue';
-
 import SearchBox from '../modules/SearchBox.vue';
 import MapPanel from '../modules/MapPanel.vue';
 import { onMounted, reactive } from 'vue';
 import http from '../../axios';
+import MarkerList from '../modules/MarkerList.vue';
 
 const getCurrentPosition = (): Promise<GeolocationPosition> => {
     if (!('geolocation' in navigator)) {
@@ -71,6 +77,7 @@ const getCurrentPosition = (): Promise<GeolocationPosition> => {
 let lMap: L.Map | undefined;
 let lMarker: L.Marker[] = [];
 let mapLc: L.Control.Locate;
+let isGlobalMarker: boolean = false;
 
 const initMapPanel = (tab: TabgeeTab) => {
     lMap?.remove();
@@ -80,9 +87,9 @@ const initMapPanel = (tab: TabgeeTab) => {
         zoom
     );
     L.control.zoom({ position: 'topright' }).addTo(lMap);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
         attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            "<a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>地理院タイル</a>",
     }).addTo(lMap);
     lMarker = [];
     lMarker = tab.map.markers.map((marker) => {
@@ -91,6 +98,12 @@ const initMapPanel = (tab: TabgeeTab) => {
             .addTo(lMap)
             .bindPopup(`<b>${title}</b><br>${address}`);
     });
+    L.easyButton('fa-solid fa-g', () => {
+        isGlobalMarker = isGlobalMarker ? false : true;
+        viewMarker();
+    })
+        .setPosition('bottomright')
+        .addTo(lMap);
     lMap?.on('move', () => {
         const zoom = lMap?.getZoom();
         const pos = lMap?.getCenter();
@@ -104,6 +117,15 @@ const initMapPanel = (tab: TabgeeTab) => {
     });
     lMap?.on('contextmenu', async (e: L.LeafletMouseEvent) => {
         const { lat, lng } = e.latlng;
+        const markers = reactivityTabsObj.tabs.flatMap(
+            (tab) => tab.map.markers
+        );
+        if (
+            markers.find(
+                (marker) => marker.latitude === lat && marker.longitude === lng
+            )
+        )
+            return;
         const title = '新しいマーカー';
         const address = (
             await http.get(`/reverseGeocode?lat=${lat}&lon=${lng}`)
@@ -111,8 +133,11 @@ const initMapPanel = (tab: TabgeeTab) => {
         const marker = {
             latitude: lat,
             longitude: lng,
+            isTitleInputState: false,
+            isMemoInputState: false,
             title: title,
             address: address ?? '不明な住所',
+            memo: '',
         };
         getEnabledTab().map.markers.push(marker);
         viewLocalMarker();
@@ -248,14 +273,48 @@ const updatePanel = (location: {
 };
 
 const viewLocalMarker = () => {
+    lMarker.forEach((marker) => {
+        marker.remove();
+    });
     const enabledTab = getEnabledTab();
     const markers = enabledTab.map.markers.map((marker) => {
         const { latitude: lat, longitude: lng, title, address } = marker;
         return L.marker([lat, lng])
             .addTo(lMap)
-            .bindPopup(`<b>${title}</b><br>${address}`);
+            .bindTooltip(`<b>${title}</b><br>${address}`);
     });
     lMarker = markers;
+};
+
+const viewGlobalMarker = () => {
+    lMarker.forEach((marker) => {
+        marker.remove();
+    });
+    const tabs = reactivityTabsObj.tabs;
+    const markers = tabs.flatMap(({ map: { markers } }) => {
+        return markers.map((marker) => {
+            const { latitude: lat, longitude: lng, title, address } = marker;
+            return L.marker([lat, lng])
+                .addTo(lMap)
+                .bindTooltip(`<b>${title}</b><br>${address}`);
+        });
+    });
+    lMarker = markers;
+};
+
+const viewMarker = () => {
+    isGlobalMarker ? viewGlobalMarker() : viewLocalMarker();
+};
+
+const removeMarker = (marker: TabgeeMarker) => {
+    reactivityTabsObj.tabs.forEach((tab) => {
+        tab.map.markers = tab.map.markers.filter(
+            (m) =>
+                m.latitude !== marker.latitude &&
+                m.longitude !== marker.longitude
+        );
+    });
+    viewMarker();
 };
 
 const jumpView = (location: {
@@ -283,6 +342,11 @@ const jumpView = (location: {
         ></SearchBox>
         <MapPanel class="mapPanel z-0"></MapPanel>
     </div>
+    <MarkerList
+        @apply-marker="viewMarker"
+        @remove-marker="removeMarker"
+        v-bind:tabs="reactivityTabsObj"
+    ></MarkerList>
 </template>
 
 <style scoped></style>
