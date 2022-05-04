@@ -1,16 +1,33 @@
-# Vue 3 + TypeScript + Vite
+# TabGee
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+[![GitHub issues](https://img.shields.io/github/issues/airRnot1106/TabGee)](https://github.com/airRnot1106/TabGee/issues) [![GitHub stars](https://img.shields.io/github/stars/airRnot1106/TabGee)](https://github.com/airRnot1106/TabGee/stargazers) [![GitHub license](https://img.shields.io/github/license/airRnot1106/TabGee)](https://github.com/airRnot1106/TabGee/blob/main/LICENSE)
 
-## Recommended IDE Setup
+---
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar)
+## Overview
 
-## Type Support For `.vue` Imports in TS
+Vue の習作で作った地図サイトです。ブラウザのようにタブで複数の地図を切り替えることができます。
 
-Since TypeScript cannot handle type information for `.vue` imports, they are shimmed to be a generic Vue component type by default. In most cases this is fine if you don't really care about component prop types outside of templates. However, if you wish to get actual prop types in `.vue` imports (for example to get props validation when using manual `h(...)` calls), you can enable Volar's Take Over mode by following these steps:
+## DEMO
 
-1. Run `Extensions: Show Built-in Extensions` from VS Code's command palette, look for `TypeScript and JavaScript Language Features`, then right click and select `Disable (Workspace)`. By default, Take Over mode will enable itself if the default TypeScript extension is disabled.
-2. Reload the VS Code window by running `Developer: Reload Window` from the command palette.
+<div align="center">
+    <img src="https://user-images.githubusercontent.com/62370527/166646572-7f396259-ccb0-468d-92e5-3d378764b0a5.png" alt="logo" width="90%" height="90%">
+</div>
 
-You can learn more about Take Over mode [here](https://github.com/johnsoncodehk/volar/discussions/471).
+## Product
+
+Web Link: [TabGee](https://tabgee.herokuapp.com/)
+
+## Issues
+
+問題を発見したら Issue か Twitter まで:bug:
+
+## Author
+
+-   Github: [airRnot1106](https://github.com/airRnot1106)
+-   NPM: [airrnot1106](https://www.npmjs.com/~airrnot1106)
+-   Twitter: [@airRnot1106](https://twitter.com/airRnot1106)
+
+## LICENSE
+
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/airRnot1106/TabGee/blob/main/LICENSE) file for details.
