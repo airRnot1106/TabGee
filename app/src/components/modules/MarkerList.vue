@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { emit } from 'process';
 import { ref } from 'vue';
 import { TabgeeMarker, TabgeeTabs } from '../pages/MapContainer.vue';
 
@@ -29,10 +28,10 @@ const removeMarker = (marker: TabgeeMarker) => {
 
 <template>
     <div
-        class="overflow-auto overscroll-contain bg-gray-200 py-10 px-40"
+        class="overflow-auto overscroll-contain bg-gray-200 py-10 px-1 sm:px-20 lg:px-40"
         style="height: 30vh"
     >
-        <div class="bg-white p-5 rounded-lg">
+        <div class="bg-white p-2 lg:p-5 rounded-lg">
             <div class="flex items-center">
                 <i class="fa-solid fa-location-dot px-1"></i>
                 <p>Marker List</p>
@@ -43,19 +42,19 @@ const removeMarker = (marker: TabgeeMarker) => {
             >
                 <div class="m-3">{{ tab.title }}</div>
                 <table class="table-fixed break-all w-full">
-                    <thead class="">
+                    <thead>
                         <tr class="bg-gray-50 rounded-lg">
-                            <th class="px-4 py-2">Title</th>
-                            <th class="px-4 py-2">Address</th>
-                            <th class="px-4 py-2">Memo</th>
-                            <th class="px-4 py-2" style="width: 2vh"></th>
+                            <th class="sm:px-4 sm:py-2">Title</th>
+                            <th class="sm:px-4 sm:py-2">Address</th>
+                            <th class="sm:px-4 sm:py-2">Memo</th>
+                            <th class="sm:px-4 sm:py-2" style="width: 2vh"></th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="marker in tab.map.markers">
                             <td
                                 v-if="marker.isTitleInputState"
-                                class="px-4 py-2"
+                                class="sm:px-4 sm:py-2"
                             >
                                 <input
                                     v-on:keydown.enter="
@@ -66,7 +65,7 @@ const removeMarker = (marker: TabgeeMarker) => {
                                     class="w-full border-2 border-gray-200 rounded-lg"
                                 />
                             </td>
-                            <td v-else class="px-4 py-2">
+                            <td v-else class="sm:px-4 sm:py-2">
                                 <div class="flex items-center">
                                     <button
                                         v-on:click="
@@ -78,10 +77,12 @@ const removeMarker = (marker: TabgeeMarker) => {
                                     <p class="px-2">{{ marker.title }}</p>
                                 </div>
                             </td>
-                            <td class="px-4 py-2">{{ marker.address }}</td>
+                            <td class="sm:px-4 sm:py-2">
+                                {{ marker.address }}
+                            </td>
                             <td
                                 v-if="marker.isMemoInputState"
-                                class="px-4 py-2"
+                                class="sm:px-4 sm:py-2"
                             >
                                 <input
                                     v-on:keydown.enter="
@@ -92,7 +93,7 @@ const removeMarker = (marker: TabgeeMarker) => {
                                     class="w-full border-2 border-gray-200 rounded-lg"
                                 />
                             </td>
-                            <td v-else class="px-4 py-2">
+                            <td v-else class="sm:px-4 sm:py-2">
                                 <div class="flex items-center">
                                     <button
                                         v-on:click="
@@ -104,7 +105,7 @@ const removeMarker = (marker: TabgeeMarker) => {
                                     <p class="px-2">{{ marker.memo }}</p>
                                 </div>
                             </td>
-                            <td class="px-4 py-2">
+                            <td class="sm:px-4 sm:py-2">
                                 <button
                                     v-on:click="removeMarker(marker)"
                                     class="translate -translate-x-3 px-2 rounded-lg hover:bg-gray-100"

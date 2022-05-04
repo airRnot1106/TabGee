@@ -4,8 +4,8 @@
     "version": "0.0.0",
     "scripts": {
         "dev:app": "vite",
-        "dev:server": "ts-node-dev -P tsconfig.server.json server/src/server.ts",
-        "build": "vite build && tsc -p tsconfig.server.json",
+        "dev:server": "ts-node-dev -P server/tsconfig.json server/src/server.ts",
+        "build": "vite build && tsc -p server/tsconfig.json",
         "start": "node ./server/dist/server.js",
         "preview": "vite preview",
         "heroku-postbuild": "npm run build"
@@ -33,6 +33,7 @@
         "@types/leaflet.locatecontrol": "^0.74.0",
         "@types/node": "^17.0.26",
         "@types/node-fetch": "^2.6.1",
+        "@types/serve-favicon": "^2.5.3",
         "@typescript-eslint/eslint-plugin": "^5.10.0",
         "@typescript-eslint/parser": "^5.10.0",
         "@vitejs/plugin-vue": "^2.3.1",

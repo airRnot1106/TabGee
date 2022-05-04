@@ -34,7 +34,7 @@ const toggleTab = (e: MouseEvent) => {
 </script>
 
 <template>
-    <div class="bg-white inline-flex flex-row">
+    <div class="bg-white flex w-full overflow-auto overscroll-x-contain">
         <nav
             v-for="(tab, index) in props.tabs.tabs"
             class="inline-flex items-center"

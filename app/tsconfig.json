@@ -1,5 +1,4 @@
 {
-    "extends": "./tsconfig.json",
     "compilerOptions": {
         "target": "esnext",
         "useDefineForClassFields": true,
@@ -19,11 +18,5 @@
         "noImplicitOverride": true,
         "noPropertyAccessFromIndexSignature": true
     },
-    "include": [
-        "./app/src/**/*.ts",
-        "./app/src/**/*.d.ts",
-        "./app/src/**/*.tsx",
-        "./app/src/**/*.vue"
-    ],
-    "references": [{ "path": "./tsconfig.node.json" }]
+    "references": [{ "path": "../tsconfig.node.json" }]
 }
