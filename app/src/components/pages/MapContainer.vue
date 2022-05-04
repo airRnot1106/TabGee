@@ -65,6 +65,21 @@ import { inject, onMounted, reactive, watch } from 'vue';
 import http from '../../axios';
 import MarkerList from '../modules/MarkerList.vue';
 import { VueCookies } from 'vue-cookies';
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconRetina from 'leaflet/dist/images/marker-icon-2x.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    iconRetinaUrl: iconRetina,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    tooltipAnchor: [16, -28],
+    shadowSize: [41, 41],
+});
+L.Marker.prototype.options.icon = DefaultIcon;
 
 let lMap: L.Map | undefined;
 let lMarker: L.Marker[] = [];
@@ -78,7 +93,7 @@ const initMapPanel = (tab: TabgeeTab) => {
         [latitude, longitude],
         zoom
     );
-
+    if (!lMap) return;
     L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
         attribution:
             "<a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>地理院タイル</a>",
@@ -101,7 +116,7 @@ const initMapPanel = (tab: TabgeeTab) => {
     lMarker = tab.map.markers.map((marker) => {
         const { latitude: lat, longitude: lng, title, address } = marker;
         return L.marker([lat, lng])
-            .addTo(lMap)
+            .addTo(lMap!)
             .bindPopup(`<b>${title}</b><br>${address}`);
     });
     L.easyButton('fa-solid fa-g', () => {
@@ -121,7 +136,7 @@ const initMapPanel = (tab: TabgeeTab) => {
             zoom: zoom,
         });
     });
-    lMap?.on('contextmenu', async (e: L.LeafletMouseEvent) => {
+    const createMarker = async (e: L.LeafletMouseEvent) => {
         const { lat, lng } = e.latlng;
         const markers = reactivityTabsObj.tabs.flatMap(
             (tab) => tab.map.markers
@@ -142,15 +157,22 @@ const initMapPanel = (tab: TabgeeTab) => {
             isTitleInputState: false,
             isMemoInputState: false,
             title: title,
-            address: address ?? '不明な住所',
+            address: address || '不明な住所',
             memo: '',
         };
         getEnabledTab().map.markers.push(marker);
         viewMarker();
+    };
+    lMap?.on('contextmenu', async (e: L.LeafletMouseEvent) => {
+        createMarker(e);
+    });
+    lMap?.on('dblclick', async (e: L.LeafletMouseEvent) => {
+        createMarker(e);
     });
 };
 
 onMounted(() => {
+    if (!$cookies) return;
     const cookie = $cookies.get('tabs');
     if (cookie) {
         reactivityTabsObj.enabledTabIndex = cookie.enabledTabIndex;
@@ -193,6 +215,7 @@ const reactivityTabsObj = reactive<TabgeeTabs>(defaultTabsObj);
 const $cookies = inject<VueCookies>('$cookies');
 
 watch(reactivityTabsObj, () => {
+    if (!$cookies) return;
     $cookies.set('tabs', reactivityTabsObj);
 });
 
@@ -285,7 +308,7 @@ const viewLocalMarker = () => {
     const markers = enabledTab.map.markers.map((marker) => {
         const { latitude: lat, longitude: lng, title, address } = marker;
         return L.marker([lat, lng])
-            .addTo(lMap)
+            .addTo(lMap!)
             .bindTooltip(`<b>${title}</b><br>${address}`);
     });
     lMarker = markers;
@@ -300,7 +323,7 @@ const viewGlobalMarker = () => {
         return markers.map((marker) => {
             const { latitude: lat, longitude: lng, title, address } = marker;
             return L.marker([lat, lng])
-                .addTo(lMap)
+                .addTo(lMap!)
                 .bindTooltip(`<b>${title}</b><br>${address}`);
         });
     });

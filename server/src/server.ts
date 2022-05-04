@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-//@ts-nocheck
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
@@ -50,9 +48,9 @@ app.get('/api/search', async (req, res) => {
                 await search(query),
             ].find(({ body }) => body.length) ?? { type: '404', body: [] };
             console.log(type);
-            return { status: 200, type: type, body: body };
+            return { status: 200, type: type, body: body } as const;
         } catch (e) {
-            return { status: 400, error: (e as Error).message };
+            return { status: 400, error: (e as Error).message } as const;
         }
     })(q);
     res.json(apiRes);
@@ -68,9 +66,9 @@ app.get('/api/reverseGeocode', async (req, res) => {
     const apiRes: ApiResponse<any> = await (async ({ lat, lon }) => {
         try {
             const { type, body } = await reverseGeocode({ lat, lon });
-            return { status: 200, type: type, body: body };
+            return { status: 200, type: type, body: body } as const;
         } catch (e) {
-            return { status: 400, error: (e as Error).message };
+            return { status: 400, error: (e as Error).message } as const;
         }
     })({ lat, lon });
     res.json(apiRes);
